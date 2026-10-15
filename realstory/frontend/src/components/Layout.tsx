@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { SECTIONS } from '../sections'
+import { CURRENT_PHASE, SECTIONS } from '../sections'
+import { ProjectPicker } from './ProjectPicker'
 
 export function Layout() {
   return (
@@ -8,12 +9,13 @@ export function Layout() {
         <div className="brand">
           RealStory<span>Animation Studio</span>
         </div>
+        <ProjectPicker />
         <ul>
           {SECTIONS.map((s) => (
             <li key={s.path}>
               <NavLink to={s.path} end={s.path === '/'}>
                 {s.label}
-                {s.phase > 1 && <small>Phase {s.phase}</small>}
+                {s.phase > CURRENT_PHASE && <small>Phase {s.phase}</small>}
               </NavLink>
             </li>
           ))}

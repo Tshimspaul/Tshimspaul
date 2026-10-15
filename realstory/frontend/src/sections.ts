@@ -1,3 +1,6 @@
+/** Sections with phase <= CURRENT_PHASE are functional. */
+export const CURRENT_PHASE = 2
+
 export interface Section {
   path: string
   label: string

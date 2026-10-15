@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, type ProjectStatus } from '../api/client'
+import { useActiveProject } from '../activeProject'
 import { JobList } from '../components/JobList'
 import { ProjectForm } from '../components/ProjectForm'
 import { formatMoney } from '../format'
@@ -11,6 +12,9 @@ export function ProjectDetail() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
+  const { setProjectId } = useActiveProject()
+  // Opening a project makes it the active one for the production sections.
+  useEffect(() => setProjectId(id), [id, setProjectId])
 
   const project = useQuery({ queryKey: ['project', id], queryFn: () => api.project(id) })
   const jobs = useQuery({
@@ -26,7 +30,7 @@ export function ProjectDetail() {
       done()
     },
   })
-  const remove = useMutation({ mutationFn: () => api.deleteProject(id), onSuccess: () => { done(); navigate('/projets') } })
+  const remove = useMutation({ mutationFn: () => api.deleteProject(id), onSuccess: () => { setProjectId(null); done(); navigate('/projets') } })
   const snapshot = useMutation({ mutationFn: () => api.createJob(id, 'project_snapshot'), onSuccess: done })
 
   if (project.isPending) return <p className="muted">Chargement…</p>

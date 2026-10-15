@@ -103,7 +103,7 @@ describe('Interface', () => {
   })
 
   it('shows API validation errors to the user', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
       new Response(JSON.stringify({ title: ['Le titre est obligatoire.'] }), { status: 400 }),
     )
     renderAt('/projets?nouveau=1')

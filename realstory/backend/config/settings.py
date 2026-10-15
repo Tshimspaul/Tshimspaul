@@ -36,6 +36,14 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "apps.projects",
     "apps.jobs",
+    "apps.common",
+    "apps.stories",
+    "apps.bible",
+    "apps.characters",
+    "apps.sets",
+    "apps.references",
+    "apps.scripts",
+    "apps.storyboards",
 ]
 
 MIDDLEWARE = [
@@ -97,7 +105,7 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 50,
+    "PAGE_SIZE": 200,
     # Phase 1 is a single-user local prototype. Authentication and
     # permissions are added in phase 7.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],

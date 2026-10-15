@@ -21,9 +21,53 @@ Django + Django REST Framework ── PostgreSQL
 | `frontend/src/pages/` | Écrans : tableau de bord, liste et détail des projets, sections prévues. |
 | `frontend/src/sections.ts` | Les 15 sections du menu et la phase de chacune. |
 
-Les phases suivantes ajouteront des applications Django séparées
-(`stories`, `bible`, `characters`, `scripts`, `storyboards`, `media`, `generation`,
-`audio`, `editing`) et un dossier `providers/` pour les adaptateurs de services externes.
+| `backend/apps/common/` | Outils partagés : filtrage par projet, contrôle « même projet », réorganisation, chemins de stockage. |
+| `backend/apps/stories/` | Histoire, sources, faits classés, contradictions, fiche de validation (`services.py`). |
+| `backend/apps/bible/` | Bible de série et sa validation. |
+| `backend/apps/characters/` | Personnages et relations. |
+| `backend/apps/sets/` | Décors et accessoires. |
+| `backend/apps/references/` | Images de référence versionnées (personnage, décor ou accessoire). |
+| `backend/apps/scripts/` | Épisodes, scènes, répliques étiquetées, contrôle chronologique. |
+| `backend/apps/storyboards/` | Plans. |
+
+Les phases suivantes ajouteront `generation`, `audio`, `editing` et un dossier
+`providers/` pour les adaptateurs de services externes.
+
+## Chaîne de validation (phase 2)
+
+```
+Histoire + sources + faits ──► Fiche historique validée ──► Bible validée ──► Épisodes, scènes, plans
+           ▲                              │                       │
+           └── toute modification ────────┘    toute modification ┘ (retour en brouillon)
+```
+
+Règles appliquées côté serveur (donc aussi via l'API) :
+
+- un fait « vérifié » sans source est refusé ; la fiche signale aussi un fait vérifié dont la source a été supprimée ;
+- une contradiction ouverte bloque la validation historique ; sa résolution exige un texte ;
+- la bible ne se valide qu'après la fiche historique, avec une durée cohérente avec le format ;
+- un épisode ne peut être créé qu'avec une bible validée ;
+- une réplique d'un personnage fictif est « fiction » ; celle d'une personne réelle est
+  « reconstituée » sauf citation authentique, qui exige une source ;
+- tous les objets liés (sources, lieux, personnages, références) doivent appartenir au même projet ;
+- les identifiants (`CHR-`, `LOC-`, `PRP-`, `REF-`, `SCN-`, `SHOT-`) dérivent de la clé
+  primaire : ils ne changent jamais, même après réorganisation.
+
+## API (phase 2)
+
+| Ressource | Points d'accès |
+|---|---|
+| Histoire | `GET/PATCH /api/stories/<projet>/`, `GET …/validation-sheet/`, `POST …/validate/` |
+| Sources, faits | `/api/sources/`, `/api/facts/` (`?project=`, `?category=`) |
+| Contradictions | `/api/contradictions/`, `POST …/<id>/resolve/` |
+| Bible | `GET/PATCH /api/bibles/<projet>/`, `POST …/validate/`, `GET /api/bibles/formats/` |
+| Personnages | `/api/characters/`, `/api/relationships/` |
+| Décors | `/api/locations/`, `/api/props/` |
+| Références | `/api/references/` (multipart), `POST …/<id>/replace/`, `POST …/<id>/make-current/` |
+| Scénarios | `/api/episodes/`, `GET …/<id>/full/`, `POST …/<id>/reorder-scenes/`, `/api/scenes/`, `/api/lines/` |
+| Storyboards | `/api/shots/`, `POST /api/scenes/<id>/reorder-shots/` |
+
+Documentation interactive complète : `/api/docs/`.
 
 ## Tâches
 
@@ -63,4 +107,5 @@ ou terminées (coût réel s'il est connu, sinon coût estimé).
   l'application sur Internet en l'état.
 - **Secrets** : uniquement dans `.env` (non versionné). L'application refuse de démarrer
   sans `DJANGO_SECRET_KEY`.
-- **Stockage des médias** : `media_storage/projects/<id_projet>/<type>/…` (non versionné).
+- **Stockage des médias** : `media_storage/projects/<id_projet>/<type>/…` (non versionné) ;
+  en développement, Django sert `/media/` et Vite le relaie.

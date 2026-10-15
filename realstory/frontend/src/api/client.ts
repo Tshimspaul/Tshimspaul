@@ -47,41 +47,46 @@ export interface Dashboard {
   recent_jobs: Job[]
 }
 
-interface Page<T> {
+export interface Page<T> {
   count: number
   results: T[]
 }
 
 export class ApiError extends Error {
   readonly data: unknown
-  constructor(message: string, data: unknown) {
+  readonly status: number | null
+  constructor(message: string, data: unknown, status: number | null = null) {
     super(message)
     this.data = data
+    this.status = status
   }
 }
 
 function describe(data: unknown): string {
+  if (Array.isArray(data)) return data.map(describe).join(' ')
   if (data && typeof data === 'object') {
-    return Object.entries(data as Record<string, unknown>)
-      .map(([, v]) => (Array.isArray(v) ? v.join(' ') : String(v)))
+    return Object.values(data as Record<string, unknown>)
+      .map(describe)
       .join(' ')
   }
+  if (typeof data === 'string') return data
   return 'Erreur inattendue du serveur.'
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
+  const isForm = init?.body instanceof FormData
   try {
     res = await fetch(`/api${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...init?.headers },
+      headers: isForm ? init?.headers : { 'Content-Type': 'application/json', ...init?.headers },
     })
   } catch {
     throw new ApiError('Serveur injoignable. Le backend Django est-il démarré ?', null)
   }
   if (res.status === 204) return undefined as T
   const data = await res.json().catch(() => null)
-  if (!res.ok) throw new ApiError(describe(data), data)
+  if (!res.ok) throw new ApiError(describe(data), data, res.status)
   return data as T
 }
 
