@@ -1,0 +1,10 @@
+.env
+logs/
+media_storage/
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/staticfiles/
+node_modules/
+frontend/dist/
